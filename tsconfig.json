@@ -7,8 +7,7 @@
         "sourceMap": true,
         "typeRoots": [ "node_modules/@types", "typings" ],
         "target": "es6",
-        "outDir": "bin/",
-        "watch": true
+        "outDir": "bin/"
     },
     "include": [
         "src/**/*.ts"

@@ -6,8 +6,8 @@ export class Activity {
     public appName: string;
     public windowName: string;
 
-    public startTime: moment.Moment;
-    public endTime: moment.Moment;
+    public startTime: Date;
+    public endTime: Date;
 
     constructor(appName: string, windowName: string) {
         this.appName = appName;
@@ -22,10 +22,10 @@ export class Activity {
     }
 
     public startActivity() {
-        this.startTime = moment();
+        this.startTime = moment().toDate();
     }
 
     public endActivity() {
-        this.endTime = moment();
+        this.endTime = moment().toDate();
     }
 }

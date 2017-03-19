@@ -38,7 +38,7 @@ export class ScreenshotService extends ServiceBase {
         const file = moment().format("hh-mm-ss-a") + ".jpg";
         const fullFolderPath = path.join(this._screenshotStorageDirectory, dateFolder);
         const fullFilePath = path.join(fullFolderPath, file);
-        fs.ensureDir(fullFolderPath, err => {
+        fs.ensureDir(fullFolderPath, (err: Error) => {
             if (err) console.log(err); // => null
 
             ScreenshotUtility.captureDesktop(fullFilePath, this._screenshotConfig)

@@ -12,7 +12,9 @@ export class DbUtility {
 
     public async load(): Promise<string> {
         return new Promise<string>(resolve => {
-            this._db.loadDatabase(err => resolve(err.message));
+            this._db.loadDatabase(err => {
+                if (err) resolve(err.message); else resolve("success");
+            });
         });
     }
 
@@ -23,6 +25,14 @@ export class DbUtility {
                 resolve(doc);
             });
         });
+    }
 
+    public async find<T>(query: any): Promise<Array<T>> {
+        return new Promise<Array<T>>(resolve => {
+            this._db.find(query, (err: Error, documents: T[]) => {
+                if (err) throw err;
+                resolve(documents);
+            });
+        });
     }
 }

@@ -1,32 +1,27 @@
 import * as os from "os";
-import { ConfigurationManager } from "./managers/configuration-manager";
-import { IdleService } from "./services/idle-service";
-import { ScreenshotService } from "./services/screenshot-service";
-import { WindowActivityService } from "./services/window-activity-service";
-import { ServiceBase } from "./services/service-base";
+import { Config } from "../config.default";
+import { IdleService } from "../services/idle-service";
+import { ScreenshotService } from "../services/screenshot-service";
+import { WindowActivityService } from "../services/window-activity-service";
+import { ServiceBase } from "../services/service-base";
 import { Window } from "active-window";
-import { Activity } from "./activity";
-import { DbUtility } from "./utilities/persistence/db-utility";
+import { Activity } from "../models/activity";
+import { DbUtility } from "../utilities/persistence/db-utility";
 import * as fs from "fs-extra";
 import * as path from "path";
 
-export class App {
+export class Start {
 
-    private _config: ConfigurationManager;
+    private _config: Config;
     private _idleService: IdleService;
     private _screenshotService: ScreenshotService;
     private _windowActivityService: WindowActivityService;
     private _services: Array<ServiceBase>;
     private _currentActivity: Activity;
-    private _activityHistory: Array<Activity>;
-    private _currentIntervalId: number;
-    private _lastSavedHistoryFile: string;
-    private _shouldPersistHistory: boolean;
     private _dbUtility: DbUtility;
 
     constructor() {
-        this._config = new ConfigurationManager();
-        this._activityHistory = new Array<Activity>();
+        this._config = new Config();
 
         // define the idle service;        
         this._idleService = new IdleService(this._config.idleThresholdInSeconds, this._config.idlePollIntervalInSeconds);
@@ -44,6 +39,7 @@ export class App {
         this._services = new Array<ServiceBase>(this._idleService, this._screenshotService, this._windowActivityService);
 
         this._dbUtility = new DbUtility(this._config.historyPersistenceStorageFile);
+        this._dbUtility.load();
 
         this.bind();
     }
@@ -59,14 +55,11 @@ export class App {
     }
 
     public start(): void {
-        console.log("APP START CALLED");
         this._services.forEach((service: ServiceBase) => service.start());
-        this._currentIntervalId = setInterval(this.persistHistory.bind(this), this._config.timeBetweenHistoryPersistenceInSeconds * 1000);
     }
 
     public stop() : void {
         this._services.forEach((service: ServiceBase) => service.stop());
-        clearInterval(this._currentIntervalId);
     }
 
     private onUserActive() : void {
@@ -91,47 +84,22 @@ export class App {
         console.log("Error taking screenshot : " + error);
     }
 
-    private onActiveWindowStatus(window: Window) : void {
+    private async onActiveWindowStatus(window: Window) : Promise<void> {
         // same task, ignore
         if (this._currentActivity != null
             && this._currentActivity.appName === window.app
-            && this._currentActivity.windowName === window.title) {
-            this._shouldPersistHistory = false;
-            return;
-        }
+            && this._currentActivity.windowName === window.title) return;
+
         // not the same task, current task in progress
         if (this._currentActivity != null) {
             this._currentActivity.endActivity();
-            this._activityHistory.push(this._currentActivity);
+            await this._dbUtility.insert(this._currentActivity);
         }
 
         // start new activity        
         this._currentActivity = new Activity(window.app, window.title);
         this._currentActivity.startActivity();
-        this._shouldPersistHistory = true;
 
-        console.log(`Current activity : App : ${this._currentActivity.appName} Title : ${this._currentActivity.windowName}`);
-    }
-
-    private persistHistory(): void {
-        const fileDateFormat = "MM-DD-YYYY_hh-mm-ss-a";
-        if (this._activityHistory.length <= 0 || !this._shouldPersistHistory) return;
-
-        const firstActivity = this._activityHistory[0];
-        const lastActivity = this._activityHistory[this._activityHistory.length - 1];
-
-        const fileName = `${firstActivity.startTime.format(fileDateFormat)}-${lastActivity.endTime.format(fileDateFormat)}.json`;
-        const fullPath = path.join(this._config.historyPersistenceStorageDirectory, fileName);
-        fs.writeFile(fullPath, JSON.stringify(this._activityHistory), err => {
-            if (err) console.log(err);
-
-            console.log("History updated: " + fullPath);
-            if (this._lastSavedHistoryFile && fullPath !== this._lastSavedHistoryFile) {
-                fs.unlink(this._lastSavedHistoryFile, err => {
-                    if (err) console.log(err);
-                });
-            }
-            this._lastSavedHistoryFile = fullPath;
-        });
+        console.log(`Activity Started : ${this._currentActivity.appName} - ${this._currentActivity.windowName} ${this._currentActivity.startTime}`);
     }
 }

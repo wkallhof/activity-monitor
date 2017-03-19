@@ -4,10 +4,7 @@
   "description": "",
   "main": "index.js",
   "bin": {
-    "activity-monitor": "./index.js"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "am": "./index.js"
   },
   "engines": {
     "node": "7.6.0"
@@ -16,11 +13,13 @@
   "license": "ISC",
   "dependencies": {
     "@paulcbetts/system-idle-time": "^1.0.4",
+    "@types/commander": "^2.3.31",
     "@types/jimp": "^0.2.0",
     "@types/moment": "^2.13.0",
     "@types/nedb": "^1.8.0",
     "@types/node": "^7.0.8",
     "active-window": "^0.1.0",
+    "commander": "^2.9.0",
     "desktop-screenshot": "^0.1.1",
     "fs-extra": "^2.1.2",
     "jimp": "^0.2.27",
