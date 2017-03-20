@@ -13,8 +13,9 @@ export class ActivityMonitor {
 
         // LOG
         program.command("log <start> [end]")
+            .option("--html", "Renders the output to html")
             .description("Outputs the log for the given <start> date. If the optional [end] date is provided, it will return logs for the range")
-            .action((start, end) => this.runLogCommand(start, end));
+            .action((start, end, options) => this.runLogCommand(start, end, options));
 
         program.parse(process.argv);
 
@@ -26,16 +27,8 @@ export class ActivityMonitor {
         action.start();
     }
 
-    private runLogCommand(start: string, end: string) {
-        let log = new Log();
-        log.getActivities(start, end).then(activities => {
-            if (activities.length <= 0) {
-                console.log("No records for given dates");
-            } else {
-                console.log(activities);
-            }
-
-            process.exit();
-        });
+    private runLogCommand(start: string, end: string, options: any) {
+        let log = new Log(options);
+        log.logActivities(start, end).then(() => process.exit());
     }
 }
