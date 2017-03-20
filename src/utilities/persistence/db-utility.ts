@@ -27,9 +27,13 @@ export class DbUtility {
         });
     }
 
-    public async find<T>(query: any): Promise<Array<T>> {
+    public async find<T>(query: any, sort?: any): Promise<Array<T>> {
         return new Promise<Array<T>>(resolve => {
-            this._db.find(query, (err: Error, documents: T[]) => {
+            let findQuery = this._db.find(query);
+            if (sort) {
+                findQuery.sort(sort);
+            }
+            findQuery.exec((err: Error, documents: T[]) => {
                 if (err) throw err;
                 resolve(documents);
             });

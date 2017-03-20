@@ -3,6 +3,7 @@ import { Activity } from "../models/activity";
 import { DbUtility } from "../utilities/persistence/db-utility";
 import * as template from "../templates/log-template";
 import * as moment from "moment";
+import * as _ from "lodash";
 import * as ejs from "ejs";
 
 export class Log {
@@ -45,7 +46,7 @@ export class Log {
         let startQuery = { startTime: { $gte: start } };
         let endQuery = { startTime: { $lte: end } };
 
-        return await this._dbUtility.find<Activity>({ $and: [startQuery, endQuery] });
+        return await this._dbUtility.find<Activity>({ $and: [startQuery, endQuery] }, {startTime : 1});
     }
 
     private render(activities: Array<Activity>) : void {
@@ -59,6 +60,6 @@ export class Log {
     }
 
     private renderHtml(activities: Array<Activity>): void {
-        console.log(ejs.render(template.asString, { activities: activities }));
+        console.log(ejs.render(template.asString, { activities: activities, moment : moment, _ : _ }));
     }
 }
