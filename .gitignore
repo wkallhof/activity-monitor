@@ -2,3 +2,4 @@
 /.tscache
 .DS_Store
 /bin
+*.html
